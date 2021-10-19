@@ -1,16 +1,17 @@
 from utilities import *
+from Crypto.PublicKey import RSA
 
 
 USER = "BOB"
 SENDER = "ALICE"
 
 
-def qskef(socket):
+def qskef(socket, sender_pubkey, prikey):
     """
     Server.
     Does a secure key exchange and gives you the key.
     """
-    
+
     X = float(socket.recv().decode())
     # Bob's secret
     b = getrandbits(POWER)
@@ -32,6 +33,15 @@ def qskef(socket):
 
 
 def main():
+    # Save public key
+    prikey = RSA.generate(2048)
+    pubkey = prikey.public_key()
+    with open(USER+"_pubkey.pem", 'wb') as wire:
+        wire.write(pubkey.export_key('PEM'))
+    
+    with open(SENDER+"_pubkey.pem", 'rb') as red:
+        sender_pubkey = RSA.import_key(red.read())
+
     context = zmq.Context()
     socket = context.socket(zmq.PAIR)
     socket.bind(f"tcp://*:{PORT}")

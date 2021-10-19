@@ -1,4 +1,5 @@
 from utilities import *
+from Crypto.PublicKey import RSA
 
 
 USER = "ALICE"
@@ -6,7 +7,7 @@ SENDER = "BOB"
 cryptogen = SystemRandom()
 
 
-def qskef(socket):
+def qskef(socket, sender_pubkey, prikey):
     """
     Client.
     Does a secure key exchange and gives you the key.
@@ -35,6 +36,15 @@ def qskef(socket):
     return KEY
 
 def main():
+    # Save public key
+    prikey = RSA.generate(2048)
+    pubkey = prikey.public_key()
+    with open(USER+"_pubkey.pem", 'wb') as wire:
+        wire.write(pubkey.export_key('PEM'))
+    
+    with open(SENDER+"_pubkey.pem", 'rb') as red:
+        sender_pubkey = RSA.import_key(red.read())
+    
     context = zmq.Context()
     socket = context.socket(zmq.PAIR)
     socket.connect(f"tcp://localhost:{PORT}")
