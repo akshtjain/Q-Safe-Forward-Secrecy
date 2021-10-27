@@ -19,31 +19,12 @@ def qskef(socket, sender_pubkey, prikey):
     B = Decimal(Decimal(b) * Decimal(X)) % 1
 
     # Receiving and decrypting A
-    enc_session_key, nonce, tag, ciphertext = \
-        [socket.recv() for _ in range(4)]
-
-    # Decrypt the session key with the private RSA key
-    cipher_rsa = PKCS1_OAEP.new(prikey)
-    session_key = cipher_rsa.decrypt(enc_session_key)
-
-    # # Decrypt the data with the AES session key
-    cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
-    data = cipher_aes.decrypt_and_verify(ciphertext, tag)
-    A = Decimal(data.decode())
+    A = recv_decimal(socket, prikey)
     # A = Decimal(socket.recv().decode())
 
     # Encrypting and sending B
-    session_key = get_random_bytes(16)
-
-    # Encrypt the session key with the public RSA key
-    cipher_rsa = PKCS1_OAEP.new(sender_pubkey)
-    enc_session_key = cipher_rsa.encrypt(session_key)
-
-    # Encrypt the data with the AES session key
-    cipher_aes = AES.new(session_key, AES.MODE_EAX)
-    ciphertext, tag = cipher_aes.encrypt_and_digest(str(B).encode())
-    [socket.send(x)
-     for x in (enc_session_key, cipher_aes.nonce, tag, ciphertext)]
+    send_decimal(socket, sender_pubkey, B)
+    # socket.send(str(B).encode())
 
     # Bob's Symmetric Key
     KEY_B = (Decimal(b) * Decimal(A)) % 1
