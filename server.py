@@ -29,7 +29,7 @@ def qskef(socket, sender_pubkey, prikey):
     # # Decrypt the data with the AES session key
     cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
     data = cipher_aes.decrypt_and_verify(ciphertext, tag)
-    A = Decimal(data.decode("utf-8"))
+    A = Decimal(data.decode())
     # A = Decimal(socket.recv().decode())
 
     # Encrypting and sending B
@@ -67,7 +67,9 @@ def main():
 
     with open(USER+"_pubkey.pem", 'wb') as wire:
         wire.write(pubkey.export_key('PEM'))
-    input("Have you run the client yet?")
+    
+    input("Press enter to continue ...")
+
     with open(SENDER+"_pubkey.pem", 'rb') as red:
         sender_pubkey = RSA.import_key(red.read())
 

@@ -48,7 +48,7 @@ def qskef(socket, sender_pubkey, prikey):
     # Decrypt the data with the AES session key
     cipher_aes = AES.new(session_key, AES.MODE_EAX, nonce)
     data = cipher_aes.decrypt_and_verify(ciphertext, tag)
-    B = Decimal(data.decode("utf-8"))
+    B = Decimal(data.decode())
    # Bob gets A. Alice gets B (via sockets)
 
     # Alice's Symmetric Key
