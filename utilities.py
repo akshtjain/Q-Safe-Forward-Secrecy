@@ -1,22 +1,80 @@
-from Crypto.Random.random import getrandbits
 from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.Protocol.KDF import PBKDF1
 from Crypto.Util.Padding import pad, unpad
-from random import SystemRandom
-from decimal import Decimal, getcontext
-from Crypto.PublicKey import RSA
+from decimal import Decimal
 from Crypto.Random import get_random_bytes
-from threading import Thread
+from decimal import getcontext
+from random import SystemRandom
+from Crypto.Protocol.KDF import PBKDF1
+from Crypto.Random.random import getrandbits
 
-import zmq
 
-
+# Global settings
 getcontext().prec = 2048
 PORT1 = 8042
 PORT2 = 8043
 # Previously shared info
 POWER = 128
 IV = bytes([0 for _ in range(16)])
+
+cryptogen = SystemRandom()
+
+
+def client_qskef(socket, sender_pubkey, prikey):
+    """
+    Client.
+    Does a secure key exchange and gives you the key.
+    """
+
+    getcontext().prec = 2048
+    X = cryptogen.random()
+    socket.send(str(X).encode())
+    # Alice's secret
+    a = getrandbits(POWER)
+    # Alice's public key
+    A = Decimal(Decimal(a) * Decimal(X)) % 1
+
+    # Encrypting and sending A
+    send_decimal(socket, sender_pubkey, A)
+
+    # Receiving and decrypting B
+    B = recv_decimal(socket, prikey)
+
+    # Alice's Symmetric Key
+    KEY_A = (Decimal(a) * Decimal(B)) % 1
+
+    PASS = str(KEY_A)[2:]
+
+    # Additional step for security
+    KEY = PBKDF1(PASS, "01234567".encode(), 16)
+    return KEY
+
+def server_qskef(socket, sender_pubkey, prikey):
+    """
+    Server.
+    Does a secure key exchange and gives you the key.
+    """
+
+    getcontext().prec = 2048
+    X = float(socket.recv().decode())
+    # Bob's secret
+    b = getrandbits(POWER)
+    # Bob's public int
+    B = Decimal(Decimal(b) * Decimal(X)) % 1
+
+    # Receiving and decrypting A
+    A = recv_decimal(socket, prikey)
+
+    # Encrypting and sending B
+    send_decimal(socket, sender_pubkey, B)
+
+    # Bob's Symmetric Key
+    KEY_B = (Decimal(b) * Decimal(A)) % 1
+
+    PASS = str(KEY_B)[2:]
+
+    # Additional step for security
+    KEY = PBKDF1(PASS, "01234567".encode(), 16)
+    return KEY
 
 
 def fn_client(socket, qskef, SENDER, sender_pubkey, prikey):

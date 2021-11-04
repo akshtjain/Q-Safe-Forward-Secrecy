@@ -1,2 +1,6 @@
+cffi==1.15.0
+pkg-resources==0.0.0
+pycparser==2.20
 pycryptodome==3.11.0
+PySPX==0.4.0
 pyzmq==22.3.0
