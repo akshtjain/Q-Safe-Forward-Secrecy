@@ -17,18 +17,14 @@ def qskef(socket, sender_pubkey, prikey):
     socket.send(str(X).encode())
     # Alice's secret
     a = getrandbits(POWER)
-    # C(a) -> a' | C(y) = (x * y) % 1
     # Alice's public key
     A = Decimal(Decimal(a) * Decimal(X)) % 1
 
     # Encrypting and sending A
     send_decimal(socket, sender_pubkey, A)
-    # socket.send(str(A).encode())
 
     # Receiving and decrypting B
     B = recv_decimal(socket, prikey)
-    # B = Decimal(socket.recv().decode())
-    # Bob gets A. Alice gets B (via sockets)
 
     # Alice's Symmetric Key
     KEY_A = (Decimal(a) * Decimal(B)) % 1
@@ -43,8 +39,11 @@ def qskef(socket, sender_pubkey, prikey):
 def main():
 
     context = zmq.Context()
-    socket = context.socket(zmq.PAIR)
-    socket.connect(f"tcp://localhost:{PORT}")
+    client_socket = context.socket(zmq.PAIR)
+    client_socket.connect(f"tcp://localhost:{PORT1}")
+
+    server_socket = context.socket(zmq.PAIR)
+    server_socket.bind(f"tcp://*:{PORT2}")
 
     # Save public key
     prikey = RSA.generate(2048)
@@ -56,7 +55,18 @@ def main():
     with open(SENDER+"_pubkey.pem", 'rb') as red:
         sender_pubkey = RSA.import_key(red.read())
 
-    sendChat(socket, qskef, SENDER, sender_pubkey, prikey)
+    client_thread = Thread(target=fn_client, args=(
+        client_socket, qskef, SENDER, sender_pubkey, prikey))
+    server_thread = Thread(target=fn_server, args=(
+        server_socket, qskef, SENDER, sender_pubkey, prikey))
+
+    threadList = [client_thread, server_thread]
+
+    for thread in threadList:
+        thread.start()
+
+    for thread in threadList:
+        thread.join()
 
 
 if __name__ == "__main__":

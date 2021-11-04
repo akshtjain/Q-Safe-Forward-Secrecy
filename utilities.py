@@ -6,15 +6,27 @@ from random import SystemRandom
 from decimal import Decimal, getcontext
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
+from threading import Thread
 
 import zmq
 
 
 getcontext().prec = 2048
-PORT = 8042
+PORT1 = 8042
+PORT2 = 8043
 # Previously shared info
 POWER = 128
 IV = bytes([0 for _ in range(16)])
+
+
+def fn_client(socket, qskef, SENDER, sender_pubkey, prikey):
+    while 1:
+        sendChat(socket, qskef, SENDER, sender_pubkey, prikey)
+
+
+def fn_server(socket, qskef, SENDER, sender_pubkey, prikey):
+    while 1:
+        receiveChat(socket, qskef, SENDER, sender_pubkey, prikey)
 
 
 def sendChat(socket, kdf, SENDER, sender_pubkey, prikey):
@@ -25,8 +37,6 @@ def sendChat(socket, kdf, SENDER, sender_pubkey, prikey):
     CT = cipher.encrypt(PT)
     socket.send(CT)
 
-    receiveChat(socket, kdf, SENDER, sender_pubkey, prikey)
-
 
 def receiveChat(socket, kdf, SENDER, sender_pubkey, prikey):
     key = kdf(socket, sender_pubkey, prikey)
@@ -36,8 +46,6 @@ def receiveChat(socket, kdf, SENDER, sender_pubkey, prikey):
     PT = unpad(PT, 16).decode()
 
     print(f"{SENDER}: {PT}")
-
-    sendChat(socket, kdf, SENDER, sender_pubkey, prikey)
 
 
 def recv_decimal(socket, privkey):
