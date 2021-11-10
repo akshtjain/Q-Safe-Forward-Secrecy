@@ -14,7 +14,7 @@ def main():
     client_socket.connect(f"tcp://localhost:{PORT1}")
 
     server_socket = context.socket(zmq.PAIR)
-    server_socket.bind(f"tcp://*:{PORT2}")
+    server_socket.bind(f"tcp://127.0.0.1:{PORT2}")
 
     # Save public key
     prikey = RSA.generate(2048)
@@ -36,7 +36,7 @@ def main():
     for thread in threadList:
         thread.start()
 
-    # print("Ready for comms")
+    print("You can now start messaging.")
 
     for thread in threadList:
         thread.join()

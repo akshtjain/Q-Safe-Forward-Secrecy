@@ -11,7 +11,7 @@ SENDER = "ALICE"
 def main():
     context = zmq.Context()
     server_socket = context.socket(zmq.PAIR)
-    server_socket.bind(f"tcp://*:{PORT1}")
+    server_socket.bind(f"tcp://127.0.0.1:{PORT1}")
 
     client_socket = context.socket(zmq.PAIR)
     client_socket.connect(f"tcp://localhost:{PORT2}")
@@ -26,7 +26,7 @@ def main():
     with open(SENDER+"_pubkey.pem", 'rb') as red:
         sender_pubkey = RSA.import_key(red.read())
 
-    # print("Ready for comms")
+    print("You can now start messaging.")
 
     client_thread = Thread(target=fn_client, args=(
         client_socket, client_qskef, SENDER, sender_pubkey, prikey))
