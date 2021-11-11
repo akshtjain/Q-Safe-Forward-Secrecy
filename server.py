@@ -1,7 +1,7 @@
 from utilities import *
-from Crypto.PublicKey import RSA
 import zmq
 from threading import Thread
+from Crypto.Random import get_random_bytes
 
 
 USER = "BOB"
@@ -17,29 +17,31 @@ def main():
     client_socket.connect(f"tcp://localhost:{PORT2}")
 
     # Save public key
-    prikey = RSA.generate(2048)
-    pubkey = prikey.public_key()
+    seed = get_random_bytes(sphincs.crypto_sign_SEEDBYTES)
+    pubkey, priv_key = sphincs.generate_keypair(seed)
+    
     with open(USER+"_pubkey.pem", 'wb') as wire:
-        wire.write(pubkey.export_key('PEM'))
+        wire.write(pubkey)
     input("Press enter to continue...")
 
     with open(SENDER+"_pubkey.pem", 'rb') as red:
-        sender_pubkey = RSA.import_key(red.read())
-
-    print("You can now start messaging.")
+        sender_pubkey = red.read()
 
     client_thread = Thread(target=fn_client, args=(
-        client_socket, client_qskef, SENDER, sender_pubkey, prikey))
+        client_socket, client_qskef, sender_pubkey, priv_key))
     server_thread = Thread(target=fn_server, args=(
-        server_socket, server_qskef, SENDER, sender_pubkey, prikey))
+        server_socket, server_qskef, SENDER, sender_pubkey, priv_key))
 
     threadList = [client_thread, server_thread]
 
     for thread in threadList:
         thread.start()
+    
+    print("You can now start messaging.")
 
     for thread in threadList:
         thread.join()
+
 
 if __name__ == "__main__":
     main()
