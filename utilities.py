@@ -17,6 +17,9 @@ IV = bytes([0 for _ in range(16)])
 BLOCK_SIZE = 256 // 8 # AES-256 for security against Grover's
 
 cryptogen = SystemRandom()
+bscolor="\033[01;34m"
+gscolor="\033[01;32m"
+rcolor="\033[00m"
 
 
 def client_qskef(socket, sender_pubkey, prikey):
@@ -108,7 +111,7 @@ def receive_chat(socket, kdf, SENDER, sender_pubkey, prikey):
     PT = cipher.decrypt_and_verify(CT, tag)
     PT = PT.decode()
 
-    print(f"{SENDER}: {PT}")
+    print(f"{bscolor}{SENDER}: {PT}{rcolor}")
 
 
 def recv_decimal(socket, pubkey):

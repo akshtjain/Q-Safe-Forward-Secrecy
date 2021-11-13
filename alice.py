@@ -36,7 +36,7 @@ def main():
     for thread in threadList:
         thread.start()
 
-    print("You can now start messaging.")
+    print(f"{gscolor}You can now start messaging.{rcolor}")
 
     for thread in threadList:
         thread.join()
